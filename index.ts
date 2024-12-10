@@ -41,7 +41,7 @@ class WatchlistScraper {
 	}
 
 	// Resolves once it hits a request that has idArray in it
-	async pageListenToGraphQlRequests() {
+	async pageListenToGraphQlRequests(isGrabAll: boolean) {
 		return new Promise<void>((resolve) => {
 			this.currentPage.on("request", async (request) => {
 				if (
@@ -60,7 +60,7 @@ class WatchlistScraper {
 
 				let idArrLength = requestIdArr.length;
 				// 250 is the maximum count rendered without scrolling
-				if (idArrLength < 250) {
+				if (idArrLength < 250 || !isGrabAll) {
 					resolve();
 					return;
 				}
@@ -91,10 +91,11 @@ class WatchlistScraper {
 		});
 	}
 
-	async watchlistGrabFirstIdBatch(isGrabAll: boolean) {
+	async watchlistGrabIds({ isGrabAll }: { isGrabAll: boolean }) {
 		await this.openBrowserAndBlankPage();
 
-		const postRequestListenerPromise = this.pageListenToGraphQlRequests();
+		const postRequestListenerPromise =
+			this.pageListenToGraphQlRequests(isGrabAll);
 		await this.currentPage.goto(
 			`https://www.imdb.com/user/${this.userId}/ratings/`
 		);
@@ -106,6 +107,11 @@ class WatchlistScraper {
 		}
 
 		this.closeScraper();
-		return;
+
+		if (Array.isArray(this.idArr) && this.idArr.length) {
+			return this.idArr;
+		} else {
+			console.error("No IDs found, try again");
+		}
 	}
 }
