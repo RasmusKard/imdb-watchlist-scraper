@@ -9,9 +9,13 @@ class WatchlistScraper {
 	browser!: Browser;
 	timeoutInMs: number;
 	constructor(userId: string, timeoutInMs = 180000) {
-		this.userId = userId;
+		this.userId = this.userIdSanitizer(userId);
 		this.idArr = [];
 		this.timeoutInMs = timeoutInMs;
+	}
+
+	userIdSanitizer(userId: string) {
+		return userId.replace(/[^a-zA-Z0-9]/g, "");
 	}
 
 	async openBrowserAndBlankPage() {
