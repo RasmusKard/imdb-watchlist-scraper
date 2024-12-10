@@ -1,14 +1,20 @@
 // init class with id of user
 import { Browser, BrowserContext, chromium, Page } from "playwright";
 
-class WatchlistScraper {
+export class WatchlistScraper {
 	userId: string;
 	idArr: Array<string>;
 	currentPage!: Page;
 	browserContext!: BrowserContext;
 	browser!: Browser;
 	timeoutInMs: number;
-	constructor(userId: string, timeoutInMs = 180000) {
+	constructor({
+		userId,
+		timeoutInMs = 180000,
+	}: {
+		userId: string;
+		timeoutInMs: number;
+	}) {
 		this.userId = this.userIdSanitizer(userId);
 		this.idArr = [];
 		this.timeoutInMs = timeoutInMs;
