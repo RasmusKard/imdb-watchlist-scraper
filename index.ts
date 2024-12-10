@@ -22,6 +22,14 @@ class WatchlistScraper {
 		});
 		const page = await context.newPage();
 
+		await page.route("**/*", (route, request) => {
+			if (["image", "media", "stylesheet"].includes(request.resourceType())) {
+				route.abort();
+			} else {
+				route.continue();
+			}
+		});
+
 		this.currentPage = page;
 		this.browserContext = context;
 		this.browser = browser;
@@ -60,12 +68,14 @@ class WatchlistScraper {
 				// Scroll to last element to load
 				const lastElementIndex = this.idArr.length;
 				const lastElementLocator = this.currentPage.getByRole("link", {
-					name: `^${lastElementIndex}\..*`,
+					name: new RegExp(`^${lastElementIndex}\..*`),
 				});
+
 				while (!(await lastElementLocator.isVisible())) {
 					this.currentPage.keyboard.press("End");
+					lastElementLocator.scrollIntoViewIfNeeded();
 				}
-				this.currentPage.keyboard.press("End");
+
 				return;
 			});
 		});
@@ -75,7 +85,7 @@ class WatchlistScraper {
 		return new Promise<void>((resolve, reject) => {
 			setTimeout(() => {
 				reject(
-					"Timed out while waiting for . (Timeout length may need to be increased)"
+					"Timed out while waiting for first POST request or while scrolling to next batch of IDs. (Timeout length may need to be increased)"
 				);
 			}, this.timeoutInMs);
 		});
