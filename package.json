@@ -3,7 +3,7 @@
     "playwright": "^1.49.0"
   },
   "name": "imdb-watchlist-scraper",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "description": "Scrape IMDb ratings list",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "keywords": [],
   "author": "RasmusKard",
   "license": "ISC",
+  "type": "module",
   "devDependencies": {},
   "repository": {
     "type": "git",
