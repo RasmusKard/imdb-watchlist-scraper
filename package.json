@@ -3,7 +3,7 @@
     "playwright": "^1.49.0"
   },
   "name": "imdb-watchlist-scraper",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Scrape IMDb ratings list",
   "main": "index.js",
   "scripts": {

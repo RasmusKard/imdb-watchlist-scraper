@@ -16,8 +16,8 @@ class WatchlistScraper {
 		headless = true,
 	}: {
 		userId: string;
-		timeoutInMs: number;
-		headless: boolean;
+		timeoutInMs?: number;
+		headless?: boolean;
 	}) {
 		this.userId = this.userIdSanitizer(userId);
 		this.idArr = [];
@@ -107,11 +107,11 @@ class WatchlistScraper {
 	}
 
 	async watchlistGrabIds({
-		isGrabAll,
-		isGrabUsername,
+		isGrabAll = true,
+		isGrabUsername = true,
 	}: {
-		isGrabAll: boolean;
-		isGrabUsername: boolean;
+		isGrabAll?: boolean;
+		isGrabUsername?: boolean;
 	}) {
 		await this.openBrowserAndBlankPage();
 
@@ -128,11 +128,7 @@ class WatchlistScraper {
 				: null;
 		}
 
-		try {
-			await Promise.race([postRequestListenerPromise, this.timeoutPromise()]);
-		} catch (error) {
-			console.error(error);
-		}
+		await Promise.race([postRequestListenerPromise, this.timeoutPromise()]);
 
 		this.closeScraper();
 
