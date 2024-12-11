@@ -51,47 +51,52 @@ class WatchlistScraper {
 	}
 
 	async closeScraper() {
+		await this.currentPage.close();
 		await this.browserContext.close();
 		await this.browser.close();
 	}
 
 	// Resolves once it hits a request that has idArray in it
-	async pageListenToGraphQlRequests(isGrabAll: boolean) {
+	async pageListenToGraphQlRequests() {
 		return new Promise<void>((resolve) => {
 			this.currentPage.on("request", async (request) => {
-				if (
-					request.method() !== "POST" ||
-					request.url() !== "https://api.graphql.imdb.com/"
-				) {
+				try {
+					if (
+						request.method() !== "POST" ||
+						request.url() !== "https://api.graphql.imdb.com/"
+					) {
+						return;
+					}
+
+					const requestIdArr = await request.postDataJSON().variables.idArray;
+					if (!Array.isArray(requestIdArr) || !requestIdArr.length) {
+						return;
+					}
+
+					this.idArr.push(...requestIdArr);
+
+					let idArrLength = requestIdArr.length;
+					// 250 is the maximum count rendered without scrolling
+					if (idArrLength < 250) {
+						resolve();
+						return;
+					}
+
+					// Scroll to last element to load
+					const lastElementIndex = this.idArr.length;
+					const lastElementLocator = this.currentPage.getByRole("link", {
+						name: new RegExp(`^${lastElementIndex}\..*`),
+					});
+
+					while (!(await lastElementLocator.isVisible())) {
+						await this.currentPage.keyboard.press("End");
+						await lastElementLocator.scrollIntoViewIfNeeded();
+					}
+
 					return;
+				} catch (error) {
+					console.error(error);
 				}
-
-				const requestIdArr = await request.postDataJSON().variables.idArray;
-				if (!Array.isArray(requestIdArr) || !requestIdArr.length) {
-					return;
-				}
-
-				this.idArr.push(...requestIdArr);
-
-				let idArrLength = requestIdArr.length;
-				// 250 is the maximum count rendered without scrolling
-				if (idArrLength < 250 || !isGrabAll) {
-					resolve();
-					return;
-				}
-
-				// Scroll to last element to load
-				const lastElementIndex = this.idArr.length;
-				const lastElementLocator = this.currentPage.getByRole("link", {
-					name: new RegExp(`^${lastElementIndex}\..*`),
-				});
-
-				while (!(await lastElementLocator.isVisible())) {
-					this.currentPage.keyboard.press("End");
-					lastElementLocator.scrollIntoViewIfNeeded();
-				}
-
-				return;
 			});
 		});
 	}
@@ -106,37 +111,33 @@ class WatchlistScraper {
 		});
 	}
 
-	async watchlistGrabIds({
-		isGrabAll = true,
-		isGrabUsername = true,
-	}: {
-		isGrabAll?: boolean;
-		isGrabUsername?: boolean;
-	}) {
+	async watchlistGrabIds() {
 		await this.openBrowserAndBlankPage();
 
-		const postRequestListenerPromise =
-			this.pageListenToGraphQlRequests(isGrabAll);
+		const postRequestListenerPromise = this.pageListenToGraphQlRequests();
 		await this.currentPage.goto(
 			`https://www.imdb.com/user/${this.userId}/ratings/`
 		);
 
-		if (isGrabUsername) {
-			const usernameLocator = this.currentPage.getByTestId("list-author-link");
-			this.username = (await usernameLocator.isVisible())
-				? await usernameLocator.innerText()
-				: null;
+		const usernameLocator = this.currentPage.getByTestId("list-author-link");
+		this.username = (await usernameLocator.isVisible())
+			? await usernameLocator.innerText()
+			: null;
+
+		try {
+			await Promise.race([postRequestListenerPromise, this.timeoutPromise()]);
+		} catch (error) {
+			console.error(error);
+			this.closeScraper();
+			return null;
 		}
 
-		await Promise.race([postRequestListenerPromise, this.timeoutPromise()]);
-
 		this.closeScraper();
-
 		if (Array.isArray(this.idArr) && this.idArr.length) {
 			return { idArr: this.idArr, username: this.username };
 		} else {
 			console.error("No IDs found, try again");
-			return;
+			return null;
 		}
 	}
 }
