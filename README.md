@@ -24,7 +24,8 @@ This library provides a `WatchlistScraper` class for scraping IMDb watchlist dat
 - **`userAgent`** _(string, optional)_:  
   Default:  
   `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"`.  
-  Refer to [Playwright documentation](https://playwright.dev/docs/api/class-browser#browser-new-context) for user agent formatting details. This user agent is used when creating a new browser context.
+  Refer to [Playwright documentation](https://playwright.dev/docs/api/class-browser#browser-new-context) for user agent formatting details.
+  This is used in Playwright's browser.newContext()
 
 ---
 
@@ -33,11 +34,10 @@ This library provides a `WatchlistScraper` class for scraping IMDb watchlist dat
 ### Scraping All Rating IDs and Username by `userId`
 
 ```javascript
-// Import the scraper class
 const scraper = new WatchlistScraper({ userId: "ur125655832" });
 
-// Call the watchlistGrabIds() function
-const idAndUsernameObj = await scraper.watchlistGrabIds();
+// watchlistGrabIds() is async, you may want to use await or .then() depending on your use case
+const idAndUsernameObj = scraper.watchlistGrabIds();
 
 // Result
 // Returns null if scraping fails.
