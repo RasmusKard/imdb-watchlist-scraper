@@ -10,19 +10,24 @@ class WatchlistScraper {
 	timeoutInMs: number;
 	username!: string | null;
 	headless: boolean;
+	userAgent: string;
+
 	constructor({
 		userId,
 		timeoutInMs = 180000,
 		headless = true,
+		userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 	}: {
 		userId: string;
 		timeoutInMs?: number;
 		headless?: boolean;
+		userAgent: string;
 	}) {
 		this.userId = this.userIdSanitizer(userId);
 		this.idArr = [];
 		this.headless = headless;
 		this.timeoutInMs = timeoutInMs;
+		this.userAgent = userAgent;
 	}
 
 	userIdSanitizer(userId: string) {
@@ -32,8 +37,7 @@ class WatchlistScraper {
 	async openBrowserAndBlankPage() {
 		const browser = await chromium.launch({ headless: this.headless });
 		const context = await browser.newContext({
-			userAgent:
-				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+			userAgent: this.userAgent,
 		});
 		const page = await context.newPage();
 
