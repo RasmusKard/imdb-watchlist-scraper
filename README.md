@@ -31,19 +31,51 @@ This library provides a `WatchlistScraper` class for scraping IMDb watchlist dat
 
 ## Usage
 
+### Main Function: `watchlistGrabIds()`
+
+### **Description**
+
+`watchlistGrabIds()` opens a playwright browser, navigates to the watchlist and scrapes all of the IDs in that watchlist.
+
+### **Return Value**
+
+On success, the function returns an object:
+
+```javascript
+{
+  idArr: string[], // Array of rating IDs
+  username: string | null // IMDb username, or null if unavailable
+}
+```
+
+### **Error cases**
+
+The function throws an error explicitly in the following cases:
+
+1. The target watchlist is privated
+2. Parsing time exceeds the time set in **`timeoutInMs`**
+3. Parsing completes but the returned idArr is empty
+
+## Example
+
 ### Scraping All Rating IDs and Username by `userId`
 
 ```javascript
 const scraper = new WatchlistScraper({ userId: "ur125655832" });
 
-// watchlistGrabIds() is async, you may want to use await or .then() depending on your use case
-const idAndUsernameObj = scraper.watchlistGrabIds();
+try {
+	const scrapingResults = await scraper.watchlistGrabIds();
 
-// Result
-// Returns null if scraping fails.
-// On success, returns an object:
-// {
-//   idArr: string[], // Array of rating IDs
-//   username: string | null // IMDb username, or null if unavailable
-// }
+	// username can be null
+	const username = scrapingResults.username;
+	if (!!username) {
+		console.log(username);
+	}
+
+	// this is never null and always has at least 1 element
+	const idArr = scrapingResults.idArr;
+	console.log(idArr);
+} catch (error) {
+	// handle error
+}
 ```
