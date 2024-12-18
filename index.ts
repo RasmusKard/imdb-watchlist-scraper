@@ -111,11 +111,16 @@ class WatchlistScraper {
 	}
 
 	async watchlistGrabIds() {
-		const timeoutID = setTimeout(() => {
-			throw new Error(
-				"Timed out while waiting for first POST request or while scrolling to next batch of IDs. (Timeout length may need to be increased)"
-			);
-		}, this.timeoutInMs);
+		let timeoutID;
+		const timeoutPromise = new Promise((_, reject) => {
+			timeoutID = setTimeout(() => {
+				reject(
+					new Error(
+						"Timed out while waiting for first POST request or while scrolling to next batch of IDs. (Timeout length may need to be increased)"
+					)
+				);
+			}, this.timeoutInMs);
+		});
 
 		await this.openBrowserAndBlankPage();
 
@@ -139,8 +144,13 @@ class WatchlistScraper {
 			? await usernameLocator.innerText()
 			: null;
 
-		await postRequestListenerPromise;
-		clearTimeout(timeoutID);
+		try {
+			await Promise.race([postRequestListenerPromise, timeoutPromise]);
+			clearTimeout(timeoutID);
+		} catch (error) {
+			clearTimeout(timeoutID);
+			throw error;
+		}
 
 		this.closeScraper();
 
