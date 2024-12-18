@@ -111,17 +111,6 @@ class WatchlistScraper {
 	}
 
 	async watchlistGrabIds() {
-		let timeoutID;
-		const timeoutPromise = new Promise((_, reject) => {
-			timeoutID = setTimeout(() => {
-				reject(
-					new Error(
-						"Timed out while waiting for first POST request or while scrolling to next batch of IDs. (Timeout length may need to be increased)"
-					)
-				);
-			}, this.timeoutInMs);
-		});
-
 		await this.openBrowserAndBlankPage();
 
 		const postRequestListenerPromise = this.pageListenToGraphQlRequests();
@@ -136,7 +125,9 @@ class WatchlistScraper {
 		);
 		if ((await privateTextA.isVisible()) && (await privateTextB.isVisible())) {
 			this.closeScraper();
-			throw new Error("Watchlist is set to private");
+			const privateWatchlistError = new Error("Watchlist is set to private");
+			privateWatchlistError.name = "PrivateWatchlistError";
+			throw privateWatchlistError;
 		}
 
 		const usernameLocator = this.currentPage.getByTestId("list-author-link");
@@ -145,10 +136,21 @@ class WatchlistScraper {
 			: null;
 
 		try {
+			let timeoutID;
+			const timeoutPromise = new Promise((_, reject) => {
+				timeoutID = setTimeout(() => {
+					reject(
+						new Error(
+							"Timed out while waiting for first POST request or while scrolling to next batch of IDs. (Timeout length may need to be increased)"
+						)
+					);
+				}, this.timeoutInMs);
+			});
 			await Promise.race([postRequestListenerPromise, timeoutPromise]);
 			clearTimeout(timeoutID);
-		} catch (error) {
-			clearTimeout(timeoutID);
+		} catch (error: any) {
+			this.closeScraper();
+			error.name = "TimeoutError";
 			throw error;
 		}
 
@@ -157,7 +159,9 @@ class WatchlistScraper {
 		if (Array.isArray(this.idArr) && this.idArr.length) {
 			return { idArr: this.idArr, username: this.username };
 		} else {
-			throw new Error("Unknown error ocurred: no IDs found");
+			const unknownError = new Error("Unknown error ocurred: no IDs found");
+			unknownError.name = "UnknownError";
+			throw unknownError;
 		}
 	}
 }
