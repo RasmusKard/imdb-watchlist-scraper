@@ -2,19 +2,23 @@
   "dependencies": {
     "playwright": "^1.49.0"
   },
+    "devDependencies": {
+    "typescript": "^5.9.2"
+  },
   "name": "imdb-watchlist-scraper",
   "version": "2.0.5",
   "description": "Scrape IMDb ratings list",
   "main": "index.js",
   "scripts": {
     "start": "tsc && node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
   },
   "keywords": [],
   "author": "RasmusKard",
   "license": "ISC",
   "type": "module",
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RasmusKard/imdb-watchlist-scraper.git"
