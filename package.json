@@ -2,11 +2,11 @@
   "dependencies": {
     "playwright": "^1.49.0"
   },
-    "devDependencies": {
+  "devDependencies": {
     "typescript": "^5.9.2"
   },
   "name": "imdb-watchlist-scraper",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "Scrape IMDb ratings list",
   "main": "index.js",
   "scripts": {
